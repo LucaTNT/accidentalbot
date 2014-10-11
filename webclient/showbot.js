@@ -70,7 +70,7 @@ Showbot.Bot = (function ($) {
             if (window.location.hostname == 'localhost' || window.location.hostname == '') {
                 connection = new WebSocket('ws://localhost:5001');
             } else {
-	            connection = new WebSocket('ws://thawing-bayou-3232.herokuapp.com:80');
+	            connection = new WebSocket('ws://www.easypodcast.it:5001');
             }
 
 			connection.onopen = function (event) {
