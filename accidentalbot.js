@@ -4,8 +4,8 @@ var sugar = require('sugar');
 var irc = require('irc');
 var webSocket = require('ws');
 
-var channel = '#atp';
-var webAddress = 'http://www.caseyliss.com/showbot';
+var channel = '#EasyPodcast';
+var webAddress = 'http://live.easypodcast.it/titoli/';
 var TITLE_LIMIT = 75;
 
 var titles = [];
@@ -41,7 +41,7 @@ function handleNewSuggestion(from, message) {
     }
     if (title.length > 0) {
 
-		var normalizedTitle = normalize(title);
+        var normalizedTitle = normalize(title);
 
         // Make sure this isn't a duplicate.
         if (titles.findAll({normalized: normalizedTitle}).length === 0) {
@@ -65,11 +65,11 @@ function handleNewSuggestion(from, message) {
 }
 
 function normalize(title) {
-	// Strip trailing periods from title
-	title = title.toLowerCase();
-	title = title.replace(/^[.\s]+|[.\s]+$/g, '');
+    // Strip trailing periods from title
+    title = title.toLowerCase();
+    title = title.replace(/^[.\s]+|[.\s]+$/g, '');
 
-	return title;
+    return title;
 }
 
 function handleSendVotes(from, message) {
@@ -115,7 +115,7 @@ function handleHelp(from) {
     client.say(from, 'To see titles/links, go to: ' + webAddress);
 }
 
-var client = new irc.Client('irc.freenode.net', 'accidentalbot', {
+var client = new irc.Client('irc.freenode.net', 'easybot', {
     channels: [channel]
 });
 
