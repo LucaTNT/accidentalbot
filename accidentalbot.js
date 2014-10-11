@@ -121,6 +121,10 @@ var client = new irc.Client('irc.freenode.net', 'easypodcastbot', {
 client.addListener('join', function (channel, nick, message) {
     if (nick === client.nick) {
         console.log("Joined channel " + channel + ".");
+    } else {
+         client.say(nick, 'Benvenuto nella chat di EasyPodcast');
+         client.say(nick, 'Per suggerire un titolo, scrivi !s {TUO_TITOLO}');
+         client.say(nick, 'Per ricevere ulteriori informazioni scrivi !help');
     }
 });
 
