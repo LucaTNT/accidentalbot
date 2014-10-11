@@ -118,7 +118,7 @@ function handleHelp(from) {
     client.say(from, user_string['helpviewtitles'] + webAddress);
 }
 
-var client = new irc.Client('irc.freenode.net', 'accidentalbot', {
+var client = new irc.Client('irc.freenode.net', 'easybot', {
     channels: [channel]
 });
 
