@@ -35,8 +35,8 @@ function handleNewSuggestion(from, message) {
     }
 
     if (title.length > TITLE_LIMIT) {
-        client.say(from, 'That title is too long (over ' + TITLE_LIMIT +
-            ' characters); please try again.');
+        client.say(from, 'Il titolo è troppo lungo (il massimo è ' + TITLE_LIMIT +
+            ' caratteri); riprova.');
         title = '';
     }
     if (title.length > 0) {
@@ -59,7 +59,7 @@ function handleNewSuggestion(from, message) {
             sendToAll({operation: 'NEW', title: title});
         } else {
             //client.say(channel, 'Sorry, ' + from + ', your title is a duplicate. Please try another!');
-            client.say(from, 'Sorry, your title is a duplicate. Please try another!');
+            client.say(from, 'Qualcuno ha già suggerito lo stesso titolo, provane un altro.');
         }
     }
 }
@@ -77,7 +77,7 @@ function handleSendVotes(from, message) {
         return t.votes;
     }, true).to(3);
 
-    client.say(from, 'Three most popular titles:');
+    client.say(from, 'I tre titoli più votati:');
     for (var i = 0; i < titlesByVote.length; ++i) {
         var votes = titlesByVote[i]['votes'];
         client.say(from, titlesByVote[i]['votes'] + ' vote' + (votes != 1 ? 's' : '') +  ': " ' + titlesByVote[i].title + '"');
@@ -102,20 +102,19 @@ function handleNewLink(from, message) {
 
         sendToAll({operation: 'NEWLINK', link: link});
     } else {
-        client.say(from, "That doesn't look like a link to me.");
+        client.say(from, "Quello non mi sembra un link.");
     }
 }
 
 function handleHelp(from) {
-    client.say(from, 'Options:');
-    client.say(from, '!s {title} - suggest a title.');
-    client.say(from, '!votes - get the three most highly voted titles.');
-    client.say(from, '!link {URL} - suggest a link.');
-    client.say(from, '!help - see this message.');
-    client.say(from, 'To see titles/links, go to: ' + webAddress);
+    client.say(from, '!s {TUO_TITOLO} - Suggerisci un titolo.');
+    client.say(from, '!voti - Richiedi i tre titoli più  votati.');
+    client.say(from, '!link {URL} - Suggerisci un link per le note della puntata.');
+    client.say(from, '!help - Leggi questo messaggio.');
+    client.say(from, 'Per vedere tutti i titoli vai su: ' + webAddress);
 }
 
-var client = new irc.Client('irc.freenode.net', 'easybot', {
+var client = new irc.Client('irc.freenode.net', 'easypodcastbot', {
     channels: [channel]
 });
 
@@ -138,7 +137,7 @@ client.addListener('kick', function (channel, nick, by, reason) {
 client.addListener('message', function (from, to, message) {
     if (message.startsWith('!s')) {
         handleNewSuggestion(from, message);
-    } else if (message.startsWith("!votes")) {
+    } else if (message.startsWith("!voti")) {
         handleSendVotes(from, message);
     } else if (message.startsWith('!l')) {
         handleNewLink(from, message);
