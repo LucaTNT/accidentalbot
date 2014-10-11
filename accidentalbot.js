@@ -7,7 +7,7 @@ var webSocket = require('ws');
 var channel = '#EasyPodcast';
 var webAddress = 'http://live.easypodcast.it/titoli/';
 var TITLE_LIMIT = 75;
-var BOT_LANG = 'en';
+var BOT_LANG = 'it';
 
 var user_string = require('./lang/' + BOT_LANG + '.json');
 
