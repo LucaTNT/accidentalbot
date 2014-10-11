@@ -125,6 +125,8 @@ var client = new irc.Client('irc.freenode.net', 'accidentalbot', {
 client.addListener('join', function (channel, nick, message) {
     if (nick === client.nick) {
         console.log("Joined channel " + channel + ".");
+    } else {
+        client.say(nick, user_string['greeting']);
     }
 });
 

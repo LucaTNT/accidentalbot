@@ -11,5 +11,6 @@
 	"helpvotes": "!votes - ottieni i tre titoli più votati.",
 	"helplink": "!link {URL} - suggerisci un link.",
 	"helphelp": "!help - guarda questo messaggio.",
-	"helpviewtitles": "Per vedere i titoli/link, vai su: "
+	"helpviewtitles": "Per vedere i titoli/link, vai su: ",
+	"greeting": "Benvenuto nella chat\nPer suggerire un titolo, scrivi !s {TUO_TITOLO}\nPer ricevere ulteriori informazioni scrivi !help"
 }
