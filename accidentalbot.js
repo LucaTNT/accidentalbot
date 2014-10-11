@@ -7,6 +7,9 @@ var webSocket = require('ws');
 var channel = '#EasyPodcast';
 var webAddress = 'http://live.easypodcast.it/titoli/';
 var TITLE_LIMIT = 75;
+var BOT_LANG = 'en';
+
+var user_string = require('./lang/' + BOT_LANG + '.json');
 
 var titles = [];
 var connections = [];
@@ -35,13 +38,13 @@ function handleNewSuggestion(from, message) {
     }
 
     if (title.length > TITLE_LIMIT) {
-        client.say(from, 'Il titolo è troppo lungo (il massimo è ' + TITLE_LIMIT +
-            ' caratteri); riprova.');
+        client.say(from, user_string['titletoolong'] + TITLE_LIMIT +
+            user_string['characterstryagain']);
         title = '';
     }
     if (title.length > 0) {
 
-        var normalizedTitle = normalize(title);
+		var normalizedTitle = normalize(title);
 
         // Make sure this isn't a duplicate.
         if (titles.findAll({normalized: normalizedTitle}).length === 0) {
@@ -59,17 +62,17 @@ function handleNewSuggestion(from, message) {
             sendToAll({operation: 'NEW', title: title});
         } else {
             //client.say(channel, 'Sorry, ' + from + ', your title is a duplicate. Please try another!');
-            client.say(from, 'Qualcuno ha già suggerito lo stesso titolo, provane un altro.');
+            client.say(from, user_string['duplicatetitle']);
         }
     }
 }
 
 function normalize(title) {
-    // Strip trailing periods from title
-    title = title.toLowerCase();
-    title = title.replace(/^[.\s]+|[.\s]+$/g, '');
+	// Strip trailing periods from title
+	title = title.toLowerCase();
+	title = title.replace(/^[.\s]+|[.\s]+$/g, '');
 
-    return title;
+	return title;
 }
 
 function handleSendVotes(from, message) {
@@ -77,10 +80,10 @@ function handleSendVotes(from, message) {
         return t.votes;
     }, true).to(3);
 
-    client.say(from, 'I tre titoli più votati:');
+    client.say(from, user_string['threemostpopular']);
     for (var i = 0; i < titlesByVote.length; ++i) {
         var votes = titlesByVote[i]['votes'];
-        client.say(from, titlesByVote[i]['votes'] + ' vote' + (votes != 1 ? 's' : '') +  ': " ' + titlesByVote[i].title + '"');
+        client.say(from, titlesByVote[i]['votes'] + ' ' + (votes != 1 ? user_string['votes'] : user_string['vote']) +  ': " ' + titlesByVote[i].title + '"');
     }
 }
 
@@ -102,29 +105,26 @@ function handleNewLink(from, message) {
 
         sendToAll({operation: 'NEWLINK', link: link});
     } else {
-        client.say(from, "Quello non mi sembra un link.");
+        client.say(from, user_string['notalink']);
     }
 }
 
 function handleHelp(from) {
-    client.say(from, '!s {TUO_TITOLO} - Suggerisci un titolo.');
-    client.say(from, '!voti - Richiedi i tre titoli più  votati.');
-    client.say(from, '!link {URL} - Suggerisci un link per le note della puntata.');
-    client.say(from, '!help - Leggi questo messaggio.');
-    client.say(from, 'Per vedere tutti i titoli vai su: ' + webAddress);
+    client.say(from, user_string['options']);
+    client.say(from, user_string['helpsuggest']);
+    client.say(from, user_string['helpvotes']);
+    client.say(from, user_string['helplink']);
+    client.say(from, user_string['helphelp']);
+    client.say(from, user_string['helpviewtitles'] + webAddress);
 }
 
-var client = new irc.Client('irc.freenode.net', 'easypodcastbot', {
+var client = new irc.Client('irc.freenode.net', 'accidentalbot', {
     channels: [channel]
 });
 
 client.addListener('join', function (channel, nick, message) {
     if (nick === client.nick) {
         console.log("Joined channel " + channel + ".");
-    } else {
-         client.say(nick, 'Benvenuto nella chat di EasyPodcast');
-         client.say(nick, 'Per suggerire un titolo, scrivi !s {TUO_TITOLO}');
-         client.say(nick, 'Per ricevere ulteriori informazioni scrivi !help');
     }
 });
 
@@ -141,7 +141,7 @@ client.addListener('kick', function (channel, nick, by, reason) {
 client.addListener('message', function (from, to, message) {
     if (message.startsWith('!s')) {
         handleNewSuggestion(from, message);
-    } else if (message.startsWith("!voti")) {
+    } else if (message.startsWith("!votes")) {
         handleSendVotes(from, message);
     } else if (message.startsWith('!l')) {
         handleNewLink(from, message);
