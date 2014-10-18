@@ -70,7 +70,7 @@ Showbot.Bot = (function ($) {
             if (window.location.hostname == 'localhost' || window.location.hostname == '') {
                 connection = new WebSocket('ws://localhost:5001');
             } else {
-	            connection = new WebSocket('ws://www.easypodcast.it:5001');
+	            connection = new WebSocket('ws://live.easypodcast.it/showbot');
             }
 
 			connection.onopen = function (event) {
