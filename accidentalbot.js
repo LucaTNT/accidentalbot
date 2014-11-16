@@ -15,6 +15,8 @@ var titles = [];
 var connections = [];
 var links = [];
 
+var mostVoted = {id: -1, votes: 0}; // Empty entry for the most voted at startup
+
 function sendToAll(packet) {
     connections.forEach(function (connection) {
         try {
@@ -118,9 +120,24 @@ function handleHelp(from) {
     client.say(from, user_string['helpviewtitles'] + webAddress);
 }
 
-var client = new irc.Client('irc.freenode.net', 'easybot', {
+function handleNewVote(upvoted)
+{
+    var newMostVoted = titles.sortBy(function (t) { return t.votes; }, true).to(1)[0];
+
+    // If this vote makes this title the most voted one, act:
+    // (don't bother for ties)
+    if(newMostVoted['id'] != mostVoted['id'] && newMostVoted['votes'] > mostVoted['votes'])
+    {
+        mostVoted = newMostVoted;
+        client.say(channel, 'Ora il titolo più votato è "' + mostVoted['title'] + '" con ' + Number(mostVoted['votes']) + ' voti');
+        handleSendVotes(channel, '');
+    }
+}
+
+var client = new irc.Client('irc.freenode.net', 'easybot_DEV', {
     channels: [channel]
 });
+
 
 client.addListener('join', function (channel, nick, message) {
     if (nick === client.nick) {
@@ -287,6 +304,7 @@ socketServer.on('connection', function(socket) {
                     upvoted['votesBy'].push(address);
                     sendToAll({operation: 'VOTE', votes: upvoted['votes'], id: upvoted['id']});
                     console.log('+1 for ' + upvoted['title'] + ' by ' + address);
+                    handleNewVote(upvoted);
                 } else {
                     console.log('ignoring duplicate vote by ' + address + ' for ' + upvoted['title']);
                 }
