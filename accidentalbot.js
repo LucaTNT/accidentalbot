@@ -302,8 +302,30 @@ socketServer.on('connection', function(socket) {
                 if (upvoted['votesBy'].any(address) === false) {
                     upvoted['votes'] = Number(upvoted['votes']) + 1;
                     upvoted['votesBy'].push(address);
-                    sendToAll({operation: 'VOTE', votes: upvoted['votes'], id: upvoted['id']});
                     console.log('+1 for ' + upvoted['title'] + ' by ' + address);
+
+                    // Cycle through all the open sockets and send everyone a new list, containing the new vote counts
+                    connections.forEach(function (connection) {
+                        // Get the current socket's address
+                        var thisAddress = getRequestAddress(connection.upgradeReq);
+                        // Prepare a custom list for that address
+                        var titlesWithVotes = titles.map(function (title) {
+                            var isVoted = title.votesBy.some(function (testAddress) {
+                                return testAddress === thisAddress;
+                            });
+                            var newTitle = {
+                                id: title.id,
+                                author: title.author,
+                                title: title.title,
+                                votes: title.votes,
+                                voted: isVoted,
+                                time: title.time
+                            };
+                            return newTitle;
+                        });
+                        // Send to this socket and keep on cycling through
+                        connection.send(JSON.stringify({operation: 'REFRESH', titles: titlesWithVotes, links: links}));
+                    });
                     handleNewVote(upvoted);
                 } else {
                     console.log('ignoring duplicate vote by ' + address + ' for ' + upvoted['title']);
