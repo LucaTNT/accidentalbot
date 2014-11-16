@@ -83,7 +83,7 @@ function handleSendVotes(from, message) {
     client.say(from, user_string['threemostpopular']);
     for (var i = 0; i < titlesByVote.length; ++i) {
         var votes = titlesByVote[i]['votes'];
-        client.say(from, titlesByVote[i]['votes'] + ' ' + (votes != 1 ? user_string['votes'] : user_string['vote']) +  ': " ' + titlesByVote[i].title + '"');
+        client.say(from, titlesByVote[i]['votes'] + ' ' + (votes != 1 ? user_string['votes'] : user_string['vote']) +  ': "' + titlesByVote[i].title + '"');
     }
 }
 
