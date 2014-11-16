@@ -134,7 +134,7 @@ function handleNewVote(upvoted)
     }
 }
 
-var client = new irc.Client('irc.freenode.net', 'easybot_DEV', {
+var client = new irc.Client('irc.freenode.net', 'easybot', {
     channels: [channel]
 });
 
