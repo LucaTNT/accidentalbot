@@ -9,6 +9,16 @@
 		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"></link>
     </head>
     <body class="container-fluid">
+        <div style="text-align: center;">
+            <img src="https://www.easypodcast.it/wp-content/themes/pitch/images/logo.jpg" alt="EasyPodcast" />
+        </div>
+
+        <div>
+            <p>In questa pagina appaiono i titoli suggeriti nella nostra <a href="http://live.easypodcast.it/">chat</a> durante le dirette.</p>
+            <p>Puoi votare quello che ti piace di pi&ugrave; tramite questa pagina e suggerirne uno tu stesso entrando nella <a href="http://live.easypodcast.it/">chat</a> e digitando <code>!s TUO_TIITOLO</code>.</p>
+            <p>Vedrai anche i link proposti per le shownotes, e potrai suggerire anche questi, con <code>!link http://il.tuo/link/</code>.</p>
+        </div>
+
         <script id="titleRow" type="text/x-handlebars-template">
             <tr data-id="{{id}}">
 				<td><button type="button" class="vote btn btn-default btn-small" onclick="return Showbot.Bot.voteHandler(this);">
@@ -61,6 +71,10 @@
             <tbody>
             </tbody>
         </table>
+        
+        <div style="text-align: center;">
+            <a href="http://www.easypodcast.it/">EasyPodcast</a> | <a href="http://live.easypodcast.it/">Diretta</a> | <a href="http://live.easypodcast.it/" title="Puoi accedere alla chat anche connettendoti con un qualunque client IRC a irc.freenode.net e collegandoti al canale #EasyPodcast">Chat</a>
+        </div>
 
         <script type="text/javascript">
             Showbot.Bot.init();
