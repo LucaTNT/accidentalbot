@@ -20,8 +20,8 @@ var mostVoted = {id: -1, votes: 0}; // Empty entry for the most voted at startup
 // Mail-summary settings
 var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport();
-var mailSender = 'accidental@bot.com';
-var mailTo = 'luca@lucazorzi.net';
+var mailSender = 'easybot@easypodcast.it';
+var mailTo = 'info@easypodcast.it';
 var schedule = require('node-schedule');
 // Mail-summary schedule
 var j = schedule.scheduleJob({hour: 23, minute: 59}, sendSummary);
