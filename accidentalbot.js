@@ -38,7 +38,7 @@ function saveBackup() {
 
 function sendSummary() {
     // Don't bother sending an email if there's nothing to send
-    if (titles.length + links.length > 0) {}
+    if (titles.length + links.length > 0) {
         var html = "<h1>" + user_string['titles'] + "</h1>\n<ul>";
         titles.forEach(
             function (title) {
