@@ -15,10 +15,14 @@ var titles = [];
 var connections = [];
 var links = [];
 
+// Mail-summary settings
 var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport();
 var mailSender = 'accidental@bot.com';
 var mailTo = 'luca@lucazorzi.net';
+var schedule = require('node-schedule');
+// Mail-summary schedule
+var j = schedule.scheduleJob({hour: 23, minute: 59}, sendSummary);
 
 function sendToAll(packet) {
     connections.forEach(function (connection) {
