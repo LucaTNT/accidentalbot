@@ -17,6 +17,16 @@ var links = [];
 
 var mostVoted = {id: -1, votes: 0}; // Empty entry for the most voted at startup
 
+// Mail-summary settings
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport();
+var mailSender = 'accidental@bot.com';
+var mailTo = 'luca@lucazorzi.net';
+var schedule = require('node-schedule');
+// Mail-summary schedule
+var j = schedule.scheduleJob({hour: 23, minute: 59}, sendSummary);
+
+
 function sendToAll(packet) {
     connections.forEach(function (connection) {
         try {
@@ -31,6 +41,40 @@ setInterval(saveBackup, 300000);
 
 function saveBackup() {
     // TODO: Figure out what to do here.
+}
+
+function sendSummary() {
+    // Don't bother sending an email if there's nothing to send
+    if (titles.length + links.length > 0) {
+        if (titles.length > 0) {
+            var html = "<h1>" + user_string['titles'] + "</h1>\n<ul>";
+            titles.forEach(
+                function (title) {
+                    html += "\n<li>" + title.title + ' - ' + user_string['suggestedby'] + ' ' + title.author + ' - ' + title.votes + ' ' + (title.votes != 1 ? user_string['votes'] : user_string['vote']) + '</li>';
+                }
+            )
+            html += "\n</ul>"
+        }
+
+        if (links.length > 0) {
+            html += "\n<h1>" + user_string['links'] + "</h1>\n<ul>";
+            var markdown = '';
+            links.forEach(
+                function (link) {
+                    html += "\n<li><a href=\"" + link.link + '">' + link.link + '</a></li>';
+                    markdown += "\n* [" + link.link + "](" + link.link + ")";
+                }
+            )
+            html += "\n</ul><br /><pre style=\"background-color: #eee;\">" + markdown + "</pre>";
+        }
+        
+        transporter.sendMail({
+            from: mailSender,
+            to: mailTo,
+            subject: user_string['botsummary'],
+            html: html
+        });
+    }
 }
 
 function handleNewSuggestion(from, message) {
