@@ -39,23 +39,27 @@ function saveBackup() {
 function sendSummary() {
     // Don't bother sending an email if there's nothing to send
     if (titles.length + links.length > 0) {
-        var html = "<h1>" + user_string['titles'] + "</h1>\n<ul>";
-        titles.forEach(
-            function (title) {
-                html += "\n<li>" + title.title + ' - ' + user_string['suggestedby'] + ' ' + title.author + ' - ' + title.votes + ' ' + (title.votes != 1 ? user_string['votes'] : user_string['vote']) + '</li>';
-            }
-        )
-        html += "\n</ul>\n<h1>" + user_string['links'] + "</h1>\n<ul>";
+        if (titles.length > 0) {
+            var html = "<h1>" + user_string['titles'] + "</h1>\n<ul>";
+            titles.forEach(
+                function (title) {
+                    html += "\n<li>" + title.title + ' - ' + user_string['suggestedby'] + ' ' + title.author + ' - ' + title.votes + ' ' + (title.votes != 1 ? user_string['votes'] : user_string['vote']) + '</li>';
+                }
+            )
+            html += "\n</ul>"
+        }
 
-        var markdown = '';
-        links.forEach(
-            function (link) {
-                html += "\n<li><a href=\"" + link.link + '">' + link.link + '</a></li>';
-                markdown += "\n* [" + link.link + "](" + link.link + ")";
-            }
-        )
-        html += "\n</ul><br /><pre style=\"background-color: #eee;\">" + markdown + "</pre>";
-
+        if (links.length > 0) {
+            html += "\n<h1>" + user_string['links'] + "</h1>\n<ul>";
+            var markdown = '';
+            links.forEach(
+                function (link) {
+                    html += "\n<li><a href=\"" + link.link + '">' + link.link + '</a></li>';
+                    markdown += "\n* [" + link.link + "](" + link.link + ")";
+                }
+            )
+            html += "\n</ul><br /><pre style=\"background-color: #eee;\">" + markdown + "</pre>";
+        }
         
         transporter.sendMail({
             from: mailSender,
