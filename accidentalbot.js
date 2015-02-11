@@ -19,7 +19,7 @@ var links = [];
 var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport();
 var mailSender = 'accidental@bot.com';
-var mailTo = 'luca@lucazorzi.net';
+var mailTo = 'destination@address.com';
 var schedule = require('node-schedule');
 // Mail-summary schedule
 var j = schedule.scheduleJob({hour: 23, minute: 59}, sendSummary);
