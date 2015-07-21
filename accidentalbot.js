@@ -379,6 +379,8 @@ socketServer.on('connection', function(socket) {
             }
         } else if (packet.operation === 'PING') {
             socket.send(JSON.stringify({operation: 'PONG'}));
+        } else if (packet.operation == 'NEW') {
+            handleNewSuggestion(packet['author'], '!s ' + packet['title']);
         } else {
             console.log("Don't know what to do with " + packet['operation']);
         }
