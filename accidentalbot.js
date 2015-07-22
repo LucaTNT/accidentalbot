@@ -77,15 +77,24 @@ function sendSummary() {
     }
 }
 
-function handleNewSuggestion(from, message) {
+function handleNewSuggestion(from, message, fromSocket) {
+    fromSocket = fromSocket || false;
     var title = '';
     if (message.match(/^!s(?:uggest)?\s+(.+)/)) {
         title = RegExp.$1.compact();
     }
 
-    if (title.length > TITLE_LIMIT) {
-        client.say(from, user_string['titletoolong'] + TITLE_LIMIT +
-            user_string['characterstryagain']);
+    if (title.length > TITLE_LIMIT) 
+    {
+        var tooLongMessage = user_string['titletoolong'] + TITLE_LIMIT + user_string['characterstryagain'];
+        if (fromSocket)
+        {
+            fromSocket.send(JSON.stringify({operation: "ALERT", alert: tooLongMessage}));
+        }
+        else
+        {
+            client.say(from, tooLongMessage);
+        }
         title = '';
     }
     if (title.length > 0) {
@@ -108,7 +117,14 @@ function handleNewSuggestion(from, message) {
             sendToAll({operation: 'NEW', title: title});
         } else {
             //client.say(channel, 'Sorry, ' + from + ', your title is a duplicate. Please try another!');
-            client.say(from, user_string['duplicatetitle']);
+            if (fromSocket)
+            {
+                fromSocket.send(JSON.stringify({operation: "ALERT", alert: user_string['duplicatetitle']}));
+            }
+            else
+            {
+                client.say(from, user_string['duplicatetitle']);
+            }
         }
     }
 }
@@ -380,7 +396,7 @@ socketServer.on('connection', function(socket) {
         } else if (packet.operation === 'PING') {
             socket.send(JSON.stringify({operation: 'PONG'}));
         } else if (packet.operation == 'NEW') {
-            handleNewSuggestion(packet['author'], '!s ' + packet['title']);
+            handleNewSuggestion(packet['author'], '!s ' + packet['title'], socket);
         } else {
             console.log("Don't know what to do with " + packet['operation']);
         }
