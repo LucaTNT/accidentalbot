@@ -67,12 +67,11 @@ Showbot.Bot = (function ($) {
 	function connectSocket() {
 		if (connection == null || connection.readyState == 3) {
 			// Connect to the server and await feedback.
-            connection = new WebSocket('ws://localhost:5001');
-            /*if (window.location.hostname == 'localhost' || window.location.hostname == '') {
+            if (window.location.hostname == 'localhost' || window.location.hostname == '') {
                 connection = new WebSocket('ws://localhost:5001');
             } else {
 	            connection = new WebSocket('ws://live.easypodcast.it/showbot');
-            }*/
+            }
 
 			connection.onopen = function (event) {
 				resetToDefault();
