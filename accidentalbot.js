@@ -4,6 +4,51 @@ var sugar = require('sugar');
 var irc = require('irc');
 var webSocket = require('ws');
 
+// Local HTTP server to get the data
+var http = require('http');
+var server = http.createServer(function (req, res) {
+    var pieces = req.url.split('/');
+    var notFound = true;
+
+    if (pieces.length > 2)
+    {
+        if (pieces[1] == 'v1')
+        {
+            if (pieces[2] == 'ping')
+            {
+                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end('pong');
+                notFound = false;
+            }
+
+
+            if (pieces[2] == 'titles')
+            {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify(titles));
+                notFound = false;
+            }
+
+            if (pieces[2] == 'links')
+            {
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify(links));
+                notFound = false;
+            }
+        }
+    }
+    console.log('Ver ' + pieces[1])
+    console.log('Wat ' + pieces[2])
+
+    if (notFound === true)
+    {
+        res.writeHead(404);
+        res.end();
+    }
+})
+server.listen(9999, '127.0.0.1');
+
+
 var channel = '#EasyPodcast';
 var webAddress = 'http://live.easypodcast.it/titoli/';
 var TITLE_LIMIT = 75;
