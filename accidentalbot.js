@@ -4,6 +4,9 @@ var sugar = require('sugar');
 var irc = require('irc');
 var webSocket = require('ws');
 
+// Token to "secure" reset commands
+var resetToken = process.env.resetToken || '1234567890';
+
 // Local HTTP server to get the data
 var http = require('http');
 var server = http.createServer(function (req, res) {
@@ -35,10 +38,33 @@ var server = http.createServer(function (req, res) {
                 res.end(JSON.stringify(links));
                 notFound = false;
             }
+
+            if (pieces[2] == 'resetAll' && pieces.length > 3 && pieces[3] == resetToken)
+            {
+                links = [];
+                titles = [];
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
+                notFound = false;
+            }
+
+            if (pieces[2] == 'resetLinks' && pieces.length > 3 && pieces[3] == resetToken)
+            {
+                links = [];
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
+                notFound = false;
+            }
+
+            if (pieces[2] == 'resetTitles' && pieces.length > 3 && pieces[3] == resetToken)
+            {
+                links = [];
+                res.writeHead(200, {'Content-Type': 'application/json'});
+                res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
+                notFound = false;
+            }
         }
     }
-    console.log('Ver ' + pieces[1])
-    console.log('Wat ' + pieces[2])
 
     if (notFound === true)
     {
