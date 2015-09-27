@@ -12,7 +12,6 @@ var http = require('http');
 var server = http.createServer(function (req, res) {
     var pieces = req.url.split('/');
     var notFound = true;
-
     if (pieces.length > 2)
     {
         if (pieces[1] == 'v1')
@@ -41,8 +40,10 @@ var server = http.createServer(function (req, res) {
 
             if (pieces[2] == 'resetAll' && pieces.length > 3 && pieces[3] == resetToken)
             {
-                links = [];
                 titles = [];
+                mostVoted = {id: -1, votes: 0}
+                links = [];
+                refreshEveryone();
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
                 notFound = false;
@@ -51,6 +52,7 @@ var server = http.createServer(function (req, res) {
             if (pieces[2] == 'resetLinks' && pieces.length > 3 && pieces[3] == resetToken)
             {
                 links = [];
+                refreshEveryone();
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
                 notFound = false;
@@ -58,7 +60,9 @@ var server = http.createServer(function (req, res) {
 
             if (pieces[2] == 'resetTitles' && pieces.length > 3 && pieces[3] == resetToken)
             {
-                links = [];
+                titles = [];
+                mostVoted = {id: -1, votes: 0}
+                refreshEveryone();
                 res.writeHead(200, {'Content-Type': 'application/json'});
                 res.end(JSON.stringify({operation: 'resetAll', result: 'success'}));
                 notFound = false;
@@ -72,6 +76,32 @@ var server = http.createServer(function (req, res) {
         res.end();
     }
 })
+
+function refreshEveryone()
+{
+    connections.forEach(function (connection) {
+        // Get the current socket's address
+        var thisAddress = getRequestAddress(connection.upgradeReq);
+        // Prepare a custom list for that address
+        var titlesWithVotes = titles.map(function (title) {
+            var isVoted = title.votesBy.some(function (testAddress) {
+                return testAddress === thisAddress;
+            });
+            var newTitle = {
+                id: title.id,
+                author: title.author,
+                title: title.title,
+                votes: title.votes,
+                voted: isVoted,
+                time: title.time
+            };
+            return newTitle;
+        });
+        // Send to this socket and keep on cycling through
+        connection.send(JSON.stringify({operation: 'REFRESH', titles: titlesWithVotes, links: links}));
+    });
+}
+
 server.listen(9999, '127.0.0.1');
 
 
