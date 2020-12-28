@@ -1,7 +1,7 @@
 'use strict';
 
 var sugar = require('sugar');
-var irc = require('irc');
+var irc = require('irc-upd');
 var webSocket = require('ws');
 
 // Token to "secure" reset commands
@@ -72,8 +72,8 @@ var server = http.createServer(function (req, res) {
 
     if (notFound === true)
     {
-        res.writeHead(404);
-        res.end();
+        res.writeHead(400);
+        res.end(JSON.stringify({error: true, message: 'Unknown request'}));
     }
 })
 
@@ -81,7 +81,7 @@ function refreshEveryone()
 {
     connections.forEach(function (connection) {
         // Get the current socket's address
-        var thisAddress = getRequestAddress(connection.upgradeReq);
+        var thisAddress = getRequestAddress(connection);
         // Prepare a custom list for that address
         var titlesWithVotes = titles.map(function (title) {
             var isVoted = title.votesBy.some(function (testAddress) {
@@ -102,11 +102,12 @@ function refreshEveryone()
     });
 }
 
-server.listen(9999, '127.0.0.1');
+server.listen(9999, '0.0.0.0');
 
 
-var channel = '#EasyPodcast';
+var channel = '#EasyPodcastDev';
 var webAddress = 'http://live.easypodcast.it/titoli/';
+
 var TITLE_LIMIT = 75;
 var BOT_LANG = 'it';
 
@@ -120,7 +121,11 @@ var mostVoted = {id: -1, votes: 0}; // Empty entry for the most voted at startup
 
 // Mail-summary settings
 var nodemailer = require('nodemailer');
-var transporter = nodemailer.createTransport();
+var transporter = nodemailer.createTransport({
+    sendmail: true,
+    newline: 'unix',
+    path: '/usr/sbin/sendmail'
+});
 var mailSender = 'easybot@easypodcast.it';
 var mailTo = 'info@easypodcast.it';
 var schedule = require('node-schedule');
@@ -181,8 +186,11 @@ function sendSummary() {
 function handleNewSuggestion(from, message, fromSocket) {
     fromSocket = fromSocket || false;
     var title = '';
-    if (message.match(/^!s(?:uggest)?\s+(.+)/)) {
-        title = RegExp.$1.compact();
+
+    let suggestionRegex = /^!s(?:uggest)?\s+(.+)/
+    let match = suggestionRegex.exec(message)
+    if (match) {
+        title = match[1];
     }
 
     if (title.length > TITLE_LIMIT) 
@@ -203,7 +211,7 @@ function handleNewSuggestion(from, message, fromSocket) {
 		var normalizedTitle = normalize(title);
 
         // Make sure this isn't a duplicate.
-        if (titles.findAll({normalized: normalizedTitle}).length === 0) {
+        if (titles.filter(function(element){ return element.normalized == normalizedTitle}).length === 0) {
             title = {
                 id: titles.length,
                 author: from,
@@ -217,6 +225,7 @@ function handleNewSuggestion(from, message, fromSocket) {
 
             sendToAll({operation: 'NEW', title: title});
         } else {
+
             //client.say(channel, 'Sorry, ' + from + ', your title is a duplicate. Please try another!');
             if (fromSocket)
             {
@@ -233,15 +242,25 @@ function handleNewSuggestion(from, message, fromSocket) {
 function normalize(title) {
 	// Strip trailing periods from title
 	title = title.toLowerCase();
-	title = title.replace(/^[.\s]+|[.\s]+$/g, '');
+	title = title.replace(/[^a-zA-Z0-9]+/g, '');
 
 	return title;
 }
 
+function sortTitles(a, b) {
+    if (a.votes < b.votes) {
+        return 1;
+    }
+    if (a.votes == b.votes) {
+        return 0;
+    }
+    if (a.votes > b.votes) {
+        return -1;
+    }
+}
+
 function handleSendVotes(from, message) {
-    var titlesByVote = titles.sortBy(function (t) {
-        return t.votes;
-    }, true).to(3);
+    var titlesByVote = titles.sort(sortTitles).slice(0, 3);
 
     client.say(from, user_string['threemostpopular']);
     for (var i = 0; i < titlesByVote.length; ++i) {
@@ -283,7 +302,7 @@ function handleHelp(from) {
 
 function handleNewVote(upvoted)
 {
-    var newMostVoted = titles.sortBy(function (t) { return t.votes; }, true).to(1)[0];
+    var newMostVoted = titles.sort(sortTitles).slice(0, 1)[0];
 
     // If this vote makes this title the most voted one, act:
     // (don't bother for ties)
@@ -295,9 +314,18 @@ function handleNewVote(upvoted)
     }
 }
 
-var client = new irc.Client('irc.freenode.net', 'easybot', {
-    channels: [channel]
-});
+var options = {
+    channels: [channel],
+    showErrors: false,
+    userName: 'easybot',
+    realName: 'EasyPodcast IRC Robot'
+}
+if (typeof process.env.PASSWORD !== "undefined") {
+    options.sasl = true;
+    options.password = process.env.PASSWORD;
+}
+
+var client = new irc.Client('irc.freenode.net', 'easybot', options);
 
 
 client.addListener('join', function (channel, nick, message) {
@@ -319,15 +347,27 @@ client.addListener('kick', function (channel, nick, by, reason) {
 });
 
 client.addListener('message', function (from, to, message) {
-    if (message.startsWith('!s')) {
-        handleNewSuggestion(from, message);
-    } else if (message.startsWith("!votes")) {
+    if (message.startsWith("!votes")) {
         handleSendVotes(from, message);
     } else if (message.startsWith('!l')) {
         handleNewLink(from, message);
     } else if (message.startsWith('!help')) {
         handleHelp(from);
+    } else if (message.startsWith('mail')) {
+        sendSummary()
     }
+});
+
+client.addListener('message#', function (from, to, message) {
+   if (message.startsWith("!s ")) {
+       handleNewSuggestion(from, message);
+   } 
+});
+
+client.addListener('pm', function (from, message) {
+   if (message.startsWith('!s')) {
+        client.say(from, "I'm sorry, suggestions can only be made in " + channel + ".");
+   } 
 });
 
 client.addListener('error', function (message) {
@@ -359,7 +399,7 @@ function floodedBy(socket) {
         return true;
     }
 
-    var address = getRequestAddress(socket.upgradeReq);
+    var address = getRequestAddress(socket);
 
     var updatedWindow = 0 | ((new Date) / windowSize);
     if (currentWindow !== updatedWindow) {
@@ -378,7 +418,7 @@ function floodedBy(socket) {
         socket.terminate();
 
         for (var i = 0, l = connections.length; i < l; i++) {
-            if (getRequestAddress(connections[i].upgradeReq) === address &&
+            if (getRequestAddress(connections[i]) === address &&
                 connections[i] != socket) {
                 console.log("Disconnecting additional connection.");
                 connections[i].terminate();
@@ -390,7 +430,7 @@ function floodedBy(socket) {
         return false;
     }
 }
-
+// CHECK THIS https://stackoverflow.com/posts/18553850/revisions
 function getRequestAddress(request) {
     if (proxied && 'x-forwarded-for' in request.headers) {
         // This assumes that the X-Forwarded-For header is generated by a
@@ -400,7 +440,7 @@ function getRequestAddress(request) {
         return forwardedForAddresses[forwardedForAddresses.length - 1].trim();
     } else {
         // This is valid for direct deployments, without routing/load balancing.
-        return request.connection.remoteAddress;
+        return request._socket.remoteAddress;
     }
 }
 
@@ -408,7 +448,7 @@ socketServer.on('connection', function(socket) {
     if (floodedBy(socket)) return;
 
     connections.push(socket);
-    var address = getRequestAddress(socket.upgradeReq);
+    var address = getRequestAddress(socket);
     console.log('Client connected: ' + address);
 
     // Instead of sending all of the information about current titles to the
@@ -442,11 +482,6 @@ socketServer.on('connection', function(socket) {
     socket.on('message', function (data, flags) {
         if (floodedBy(socket)) return;
 
-        if (flags.binary) {
-            console.log("ignoring binary message from "  + address);
-            return;
-        }
-
         var packet;
         try {
             packet = JSON.parse(data);
@@ -456,11 +491,11 @@ socketServer.on('connection', function(socket) {
         }
 
         if (packet.operation === 'VOTE') {
-            var matches = titles.findAll({id: packet['id']});
+            var matches = titles.filter(function(title) { return title.id == packet['id']});
 
             if (matches.length > 0) {
                 var upvoted = matches[0];
-                if (upvoted['votesBy'].any(address) === false) {
+                if (upvoted['votesBy'].find(function (vote) { return vote == address }) === undefined) {
                     upvoted['votes'] = Number(upvoted['votes']) + 1;
                     upvoted['votesBy'].push(address);
                     console.log('+1 for ' + upvoted['title'] + ' by ' + address);
@@ -468,7 +503,7 @@ socketServer.on('connection', function(socket) {
                     // Cycle through all the open sockets and send everyone a new list, containing the new vote counts
                     connections.forEach(function (connection) {
                         // Get the current socket's address
-                        var thisAddress = getRequestAddress(connection.upgradeReq);
+                        var thisAddress = getRequestAddress(connection);
                         // Prepare a custom list for that address
                         var titlesWithVotes = titles.map(function (title) {
                             var isVoted = title.votesBy.some(function (testAddress) {
