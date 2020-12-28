@@ -4,8 +4,24 @@ var sugar = require('sugar');
 var irc = require('irc-upd');
 var webSocket = require('ws');
 
+// Configuration of the """REST""" API server
 // Token to "secure" reset commands
-var resetToken = process.env.resetToken || '1234567890';
+let resetToken = process.env.resetToken || '1234567890';
+let http_port = process.env.HTTP_PORT || 9999;
+let http_host = process.env.HTTP_HOST || '127.0.0.1';
+
+// IRC bot config
+var channel = process.env.IRC_CHANNEL || '#EasyPodcast';
+var webAddress = process.env.VOTE_URL || 'https://live.easypodcast.it/titoli/';
+
+var TITLE_LIMIT = 75;
+var BOT_LANG = process.env.BOT_LANG || 'it';
+
+var user_string = require('./lang/' + BOT_LANG + '.json');
+
+let MAIL_CRON_ENABLE = (typeof process.env.MAIL_CRON_ENABLE !== "undefined")
+let MAIL_CRON_HOUR = process.env.MAIL_CRON_HOUR || 23
+let MAIL_CRON_MINUTE = process.env.MAIL_CRON_MINUTE || 59
 
 // Local HTTP server to get the data
 var http = require('http');
@@ -102,16 +118,7 @@ function refreshEveryone()
     });
 }
 
-server.listen(9999, '0.0.0.0');
-
-
-var channel = '#EasyPodcastDev';
-var webAddress = 'http://live.easypodcast.it/titoli/';
-
-var TITLE_LIMIT = 75;
-var BOT_LANG = 'it';
-
-var user_string = require('./lang/' + BOT_LANG + '.json');
+server.listen(http_port, http_host);
 
 var titles = [];
 var connections = [];
@@ -130,7 +137,9 @@ var mailSender = 'easybot@easypodcast.it';
 var mailTo = 'info@easypodcast.it';
 var schedule = require('node-schedule');
 // Mail-summary schedule
-var j = schedule.scheduleJob({hour: 23, minute: 59}, sendSummary);
+if (MAIL_CRON_ENABLE) {
+    var j = schedule.scheduleJob({hour: MAIL_CRON_HOUR, minute: MAIL_CRON_MINUTE}, sendSummary);
+}
 
 
 function sendToAll(packet) {
